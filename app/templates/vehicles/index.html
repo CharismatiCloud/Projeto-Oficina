@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Produtos</h2>
+
+{% if products and products|length %}
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nome</th>
+            <th>SKU</th>
+            <th>Preço</th>
+            <th>Criado em</th>
+            <th>Atualizado em</th>
+            <th style="width:260px;"></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for p in products %}
+        <tr>
+            <td>{{ p.id }}</td>
+            <td>{{ p.name }}</td>
+            <td>{{ p.sku }}</td>
+            <td>{{ p.price|brl_price }}</td>
+            <td>{{ p.created_at | brl_date }}</td>
+            <td>{{ p.updated_at | brl_date }}</td>
+            <td class="actions">
+                <a class="btn" href="/products/{{ p.id }}">Detalhes</a>
+                <a class="btn" href="/products/{{ p.id }}/edit">Editar</a>
+
+                <!-- DELETE REST -->
+                <form action="/products/{{ p.id }}" method="post" data-method="DELETE" class="inline-form"
+                    style="display:inline">
+                    <button class="btn danger" type="submit"
+                        onclick="return confirm('Excluir este produto?')">Excluir</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="muted">Nenhum produto cadastrado ainda.</p>
+{% endif %}
+
+{% endblock %}

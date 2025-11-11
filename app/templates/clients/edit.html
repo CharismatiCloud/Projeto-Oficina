@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <h2 class="mb-4 text-center">{{ title }}</h2>
+            
+            <div class="card shadow-lg p-4">
+                {# O formulário POST envia os dados para a rota 'update_client' #}
+                <form method="POST" action="{{ url_for('update_client', client_id=client.id) }}">
+                    
+                    {# Campo oculto para o ID do cliente (Embora já esteja na URL, é bom para redundância) #}
+                    <input type="hidden" name="client_id" value="{{ client.id }}">
+
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Nome Completo</label>
+                        {# O atributo 'value' é preenchido com o dado atual do cliente #}
+                        <input type="text" class="form-control" id="name" name="name" value="{{ client.name }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Telefone (Ex: (00) 90000-0000)</label>
+                        <input type="text" class="form-control" id="phone" name="phone" value="{{ client.phone }}" required>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="email" class="form-label">Email (Opcional)</label>
+                        {# Usa 'or ""' para garantir que o campo não cause erro se o email for None #}
+                        <input type="email" class="form-control" id="email" name="email" value="{{ client.email or '' }}">
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success btn-lg">Salvar Alterações</button>
+                        
+                        {# Botão de Cancelar que volta para a página de detalhes do cliente #}
+                        <a href="{{ url_for('show_client', client_id=client.id) }}" class="btn btn-outline-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

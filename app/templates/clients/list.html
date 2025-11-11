@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Clientes Cadastrados</h2>
+    
+    <div class="mb-3">
+        {# ESTE LINK DEVE LEVAR AO FORMULÁRIO DE CRIAÇÃO #}
+        <a href="{{ url_for('new_client_form') }}" class="btn btn-success">
+            + Novo Cliente
+        </a>
+    </div>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Nome</th>
+                <th scope="col">Telefone</th>
+                <th scope="col">Email</th>
+                <th scope="col">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for client in clients %}
+            <tr>
+                <th scope="row">{{ client.id }}</th>
+                <td>{{ client.name }}</td>
+                <td>{{ client.phone }}</td>
+                <td>{{ client.email or 'N/A' }}</td>
+                <td>
+                    {# ESTE LINK DEVE LEVAR AO FORMULÁRIO DE EDIÇÃO #}
+                    <a class="btn btn-sm btn-info me-2" href="{{ url_for('edit_client_form', client_id=client.id) }}">Editar</a>
+
+                    <form action="{{ url_for('delete_client', client_id=client.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja deletar o cliente {{ client.name }} e todos os veículos e serviços dele?');">
+                        <button type="submit" class="btn btn-sm btn-danger">Excluir</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="text-center text-muted">Nenhum cliente cadastrado.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

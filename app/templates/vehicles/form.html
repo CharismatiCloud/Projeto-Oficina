@@ -1,0 +1,22 @@
+<form action="{{ action }}" method="post" class="form" {% if method_override %} data-method="{{ method_override }}" {%
+    else %} data-method="POST" {% endif %}>
+    <label>Nome
+        <input type="text" name="name" value="{{ product.name if product else '' }}" required />
+    </label>
+
+    <label>SKU
+        <input type="text" name="sku" value="{{ product.sku if product else '' }}" required />
+    </label>
+
+    <label>Preço
+        <input type="number" name="price" step="0.01" min="0"
+            value="{{ '%.2f'|format(product.price) if product else '0.00' }}" required />
+    </label>
+
+    <div class="form-actions">
+        <a class="btn" href="/products">Cancelar</a>
+        <button class="btn primary" type="submit">
+            {% if product %}Salvar Alterações{% else %}Cadastrar{% endif %}
+        </button>
+    </div>
+</form>

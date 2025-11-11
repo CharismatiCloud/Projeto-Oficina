@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Editar Produto #{{ product.id }}</h2>
+
+{# action=/products/{{id}}, method_override=PUT, product=obj #}
+{% include "products/form.html" with context %}
+{% endblock %}

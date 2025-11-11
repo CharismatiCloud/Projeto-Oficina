@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {# Título muda para edição se o objeto client existir #}
+    {% if client %}
+        <h2>Editar Cliente: {{ client.name }}</h2>
+    {% else %}
+        <h2>Cadastrar Novo Cliente</h2>
+    {% endif %}
+
+    <form class="form" 
+          {# Ação correta: se 'client' existe, vai para UPDATE, senão, para CREATE #}
+          action="{% if client %}{{ url_for('update_client', client_id=client.id) }}{% else %}{{ url_for('create_client') }}{% endif %}" 
+          method="post">
+    
+        <div class="mb-3">
+            <label for="name" class="form-label">Nome Completo:</label>
+            {# O campo preenche automaticamente o valor existente se for edição #}
+            <input type="text" class="form-control" id="name" name="name" value="{{ client.name if client else '' }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="phone" class="form-label">Telefone:</label>
+            <input type="text" class="form-control" id="phone" name="phone" placeholder="(XX) XXXXX-XXXX" value="{{ client.phone if client else '' }}" required>
+        </div>
+        
+        <div class="mb-3">
+            <label for="email" class="form-label">Email (Opcional):</label>
+            <input type="email" class="form-control" id="email" name="email" value="{{ client.email if client else '' }}">
+        </div>
+
+        <div class="form-actions">
+            <button class="btn btn-primary" type="submit">Salvar Cliente</button>
+            <a class="btn btn-secondary" href="{{ url_for('list_clients') }}">Cancelar</a>
+        </div>
+    </form>
+{% endblock %}

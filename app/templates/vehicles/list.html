@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Veículos Cadastrados</h2>
+    
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Foto</th> 
+                <th scope="col">Placa</th>
+                <th scope="col">Modelo</th>
+                <th scope="col">Cliente</th>
+                <th scope="col">Cor</th>
+                <th scope="col">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vehicle in vehicles %}
+            <tr>
+                {# <td> da Foto - Posição 1 #}
+                <td>
+                    {% if vehicle.image_url %}
+                    <img src="{{ vehicle.image_url }}" 
+                          alt="Foto do {{ vehicle.model }}" 
+                          style="width: 60px; height: 40px; object-fit: cover;">
+                    {% else %}
+                    (Sem foto)
+                    {% endif %}
+                </td>
+                
+                {# <td> da Placa - Posição 2 #}
+                <td>{{ vehicle.plate }}</td>
+                
+                {# <td> do Modelo - Posição 3 #}
+                <td>{{ vehicle.model }}</td>
+                
+                {# <td> do Cliente - Posição 4 (Correção: usando owner_name que o router popula) #}
+                <td>{{ vehicle.owner_name }}</td>
+                
+                {# <td> da Cor - Posição 5 #}
+                <td>{{ vehicle.color }}</td>
+                
+                {# <td> das Ações - Posição 6 #}
+                <td>
+                    <div class="actions">
+                        <a class="btn btn-sm btn-info me-2" href="{{ url_for('show_vehicle', vehicle_id=vehicle.id) }}">Detalhes</a>
+                        
+                        <form action="{{ url_for('delete_vehicle', vehicle_id=vehicle.id) }}" 
+                              method="post"
+                              style="display:inline;"
+                              onsubmit="return confirm('Tem certeza que deseja excluir o veículo {{ vehicle.plate }}?');">
+                            <button class="btn btn-sm btn-danger" type="submit">Excluir</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="muted">Nenhum veículo cadastrado.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
