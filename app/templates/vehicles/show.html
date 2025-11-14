@@ -60,7 +60,7 @@
                     {% for service in services %}
                         <div class="list-group-item">
                             <h5 class="mb-1">{{ service.description }}</h5>
-                            <p class="mb-1"><strong>Data:</strong> {{ service.start_date }} | <strong>Status:</strong> {{ service.status.value }}</p>
+                            <p class="mb-1"><strong>Data:</strong> {{ service.start_date }} | <strong>Status:</strong> {{ service.status }}</p>
                             <small>Valor: R$ {{ "%.2f"|format(service.price) }}</small>
                         </div>
                     {% endfor %}
