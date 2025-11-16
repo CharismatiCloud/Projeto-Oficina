@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header">
+            <h2 class="mb-0">{{ title }}</h2>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('update_service', service_id=service.id) }}">
+                
+                <div class="mb-3">
+                    <label for="description" class="form-label">Descrição do Serviço:</label>
+                    <input type="text" class="form-control" id="description" name="description" 
+                           value="{{ service.description }}" required>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="status_str" class="form-label">Status:</label>
+                        <select class="form-select" id="status_str" name="status_str">
+                            {% for status in status_options %}
+                                <option value="{{ status }}" 
+                                        {% if status == service.status %}selected{% endif %}>
+                                    {{ status }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="price" class="form-label">Preço (R$):</label>
+                        <input type="number" step="0.01" class="form-control" id="price" name="price" 
+                               value="{{ service.price }}">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="observations" class="form-label">Observações:</label>
+                    <textarea class="form-control" id="observations" name="observations" rows="3">{{ service.notes or '' }}</textarea>
+                </div>
+
+                <hr>
+                
+                <div class="d-flex justify-content-end">
+                    <a href="{{ url_for('show_vehicle', vehicle_id=service.vehicle_id) }}" class="btn btn-secondary me-2">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

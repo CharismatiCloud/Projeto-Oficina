@@ -21,7 +21,6 @@ from app.database_models import Client, Vehicle, Service
 # --- IMPORTAÇÃO DA FUNÇÃO DE AUTH ---
 from app.auth_utils import get_current_user
 # ------------------------------------
-# (Os imports do FAKE_DB foram removidos)
 
 
 router = APIRouter(prefix="/vehicles", tags=["vehicles"])
@@ -99,9 +98,6 @@ def list_vehicles(request: Request):
     
     db = SessionLocal()
     try:
-        # Usamos 'joinedload' para buscar o 'owner' (Cliente) na mesma query
-        # Isso evita múltiplas queries no template (problema N+1)
-        # O 'owner' vem do 'relationship' que definimos
         vehicles_data = db.query(Vehicle).options(
             joinedload(Vehicle.owner)
         ).order_by(Vehicle.model).all()
@@ -118,6 +114,7 @@ def list_vehicles(request: Request):
         }
     )
 
+# ⬇️⬇️ FUNÇÃO ATUALIZADA ⬇️⬇️
 @router.post("/", name="create_vehicle")
 async def create_vehicle(
     request: Request,
@@ -131,25 +128,49 @@ async def create_vehicle(
 ):
     get_current_user(request)
     
+    # Padroniza a placa para a verificação
+    plate_str = plate.upper().strip()
+    
     db = SessionLocal()
     try:
-        # Verifica se o client_id existe
+        # --- VERIFICAÇÃO DE DUPLICIDADE ---
+        existing_vehicle = db.query(Vehicle).filter(Vehicle.plate == plate_str).first()
+        if existing_vehicle:
+            # A PLACA JÁ EXISTE! Recarrega o formulário com uma mensagem de erro.
+            clients_list = db.query(Client).order_by(Client.name).all()
+            
+            # Recria o "vehicle" com os dados que o usuário digitou
+            form_data_error = {
+                "client_id": client_id, "model": model, "plate": plate,
+                "color": color, "year": year, "observations": observations
+            }
+            
+            return templates.TemplateResponse(
+                "vehicles/new.html",
+                {
+                    "request": request, 
+                    "title": "Novo Veículo", 
+                    "clients": clients_list,
+                    "vehicle": form_data_error, # Devolve os dados digitados
+                    "username": request.session.get("user"),
+                    "error": f"A placa '{plate_str}' já está cadastrada." # O ALERTA!
+                }
+            )
+        # --- FIM DA VERIFICAÇÃO ---
+
         client = db.query(Client).filter(Client.id == client_id).first()
         if not client:
             raise HTTPException(status_code=400, detail="ID de Cliente inválido.")
         
-        # Cria o novo veículo (sem ID, o banco irá gerar)
         new_vehicle = Vehicle(
-            client_id=client_id, model=model, plate=plate.upper(),
+            client_id=client_id, model=model, plate=plate_str,
             color=color, year=year, observations=observations, image_url=None
         )
         
-        # Adiciona à sessão para obter o ID
         db.add(new_vehicle)
-        db.commit() # Salva para gerar o new_vehicle.id
-        db.refresh(new_vehicle) # Atualiza o objeto com o ID do banco
+        db.commit()
+        db.refresh(new_vehicle)
 
-        # Lógica da foto (agora usa o new_vehicle.id)
         image_url = None
         if photo and photo.filename:
             safe_filename = f"{new_vehicle.id}_{Path(photo.filename).name}" 
@@ -158,8 +179,6 @@ async def create_vehicle(
                 with file_path.open("wb") as buffer:
                     shutil.copyfileobj(photo.file, buffer)
                 image_url = f"/uploads/vehicles/{safe_filename}"
-                
-                # Atualiza o veículo com o caminho da imagem
                 new_vehicle.image_url = image_url
                 db.commit()
             except Exception as e:
@@ -170,7 +189,7 @@ async def create_vehicle(
     except Exception as e:
         db.rollback()
         print(f"Erro ao criar veículo: {e}")
-        # Poderia ser uma placa duplicada
+        # Esta é a linha que está a causar o seu erro 400
         raise HTTPException(status_code=400, detail=f"Erro ao criar veículo: {e}")
     finally:
         db.close()
@@ -205,6 +224,7 @@ def edit_vehicle_form(request: Request, vehicle_id: int):
         }
     )
 
+# ⬇️⬇️ FUNÇÃO ATUALIZADA ⬇️⬇️
 @router.post("/{vehicle_id}/update", name="update_vehicle")
 async def update_vehicle(
     request: Request,
@@ -219,42 +239,67 @@ async def update_vehicle(
 ):
     get_current_user(request)
     
+    # Padroniza a placa
+    plate_str = plate.upper().strip()
+    
     db = SessionLocal()
     try:
-        # 1. Busca o veículo existente
+        # --- VERIFICAÇÃO DE DUPLICIDADE (PARA UPDATE) ---
+        existing_vehicle = db.query(Vehicle).filter(Vehicle.plate == plate_str).first()
+        
+        # Se a placa existe E o ID é diferente do veículo que estamos editando
+        if existing_vehicle and existing_vehicle.id != vehicle_id:
+            # A PLACA JÁ EXISTE EM OUTRO CARRO!
+            
+            clients_list = db.query(Client).order_by(Client.name).all()
+            
+            # Busca o veículo que o usuário tentava editar
+            vehicle_data_error = db.query(Vehicle).filter(Vehicle.id == vehicle_id).first()
+            # Retorna o erro, mas mantém os dados que o usuário tentou salvar
+            vehicle_data_error.plate = plate_str 
+            
+            return templates.TemplateResponse(
+                "vehicles/new.html",
+                {
+                    "request": request, 
+                    "vehicle": vehicle_data_error, 
+                    "title": f"Editar Veículo: {vehicle_data_error.plate}", 
+                    "clients": clients_list,
+                    "username": request.session.get("user"),
+                    "error": f"A placa '{plate_str}' já está cadastrada em outro veículo." # O ALERTA!
+                }
+            )
+        # --- FIM DA VERIFICAÇÃO ---
+        
         vehicle_to_update = db.query(Vehicle).filter(Vehicle.id == vehicle_id).first()
         if not vehicle_to_update:
             raise HTTPException(status_code=404, detail="Veículo não encontrado")
         
-        # 2. Verifica se o client_id é válido
         client = db.query(Client).filter(Client.id == client_id).first()
         if not client:
             raise HTTPException(status_code=400, detail="ID de Cliente inválido.")
             
-        # 3. Lógica da foto
-        image_url = vehicle_to_update.image_url # Mantém a foto antiga por padrão
+        image_url = vehicle_to_update.image_url 
         if photo and photo.filename:
             safe_filename = f"{vehicle_id}_{Path(photo.filename).name}"
             file_path = UPLOAD_DIR / safe_filename
             try:
                 with file_path.open("wb") as buffer:
                     shutil.copyfileobj(photo.file, buffer)
-                image_url = f"/uploads/vehicles/{safe_filename}" # Define a nova foto
+                image_url = f"/uploads/vehicles/{safe_filename}"
             except Exception as e:
                 print(f"Erro ao salvar a nova foto: {e}")
             finally:
                 await photo.close()
                 
-        # 4. Atualiza os campos
         vehicle_to_update.client_id = client_id
         vehicle_to_update.model = model
-        vehicle_to_update.plate = plate.upper()
+        vehicle_to_update.plate = plate_str # Salva a placa padronizada
         vehicle_to_update.color = color
         vehicle_to_update.year = year
         vehicle_to_update.observations = observations
         vehicle_to_update.image_url = image_url
         
-        # 5. Salva no banco
         db.commit()
     except Exception as e:
         db.rollback()
@@ -274,7 +319,6 @@ def show_vehicle(request: Request, vehicle_id: int):
     
     db = SessionLocal()
     try:
-        # Busca o veículo e já carrega o 'owner' (Cliente) e os 'services'
         vehicle = db.query(Vehicle).options(
             joinedload(Vehicle.owner),
             joinedload(Vehicle.services)
@@ -283,7 +327,6 @@ def show_vehicle(request: Request, vehicle_id: int):
         if not vehicle:
             raise HTTPException(status_code=404, detail="Veículo não encontrado")
 
-        # As variáveis abaixo são preenchidas automaticamente pelo SQLAlchemy
         client = vehicle.owner
         services_list = vehicle.services
         
@@ -315,7 +358,6 @@ def delete_vehicle(
         if not vehicle_to_delete:
             raise HTTPException(status_code=404, detail="Veículo não encontrado")
         
-        # O 'cascade' no modelo deletará os 'Services' relacionados
         db.delete(vehicle_to_delete)
         db.commit()
     except Exception as e:
@@ -347,7 +389,6 @@ async def import_vehicles(
         sheet = workbook.active
         rows = list(sheet.iter_rows(min_row=2, values_only=True))
         
-        # Busca todos os IDs de clientes válidos de uma só vez
         valid_client_ids = {row.id for row in db.query(Client.id).all()}
         
         vehicles_to_add = []
@@ -358,13 +399,10 @@ async def import_vehicles(
             except (ValueError, TypeError):
                 continue
                 
-            # Verifica se o client_id existe no banco
             if client_id not in valid_client_ids:
                 continue 
             
             plate = str(row[2]).upper() if row[2] else f"S/PLACA-{imported_count}"
-            
-            # (Opcional: verificar se placa já existe antes de adicionar)
             
             new_vehicle = Vehicle(
                 client_id=client_id,
@@ -379,7 +417,7 @@ async def import_vehicles(
             imported_count += 1
         
         if vehicles_to_add:
-            db.bulk_save_objects(vehicles_to_add) # Adiciona todos de uma vez
+            db.bulk_save_objects(vehicles_to_add)
             db.commit()
             
         return RedirectResponse(

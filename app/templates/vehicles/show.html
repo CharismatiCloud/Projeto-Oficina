@@ -29,6 +29,7 @@
                     <p><strong><i class="bi bi-calendar-event"></i> Ano:</strong> {{ vehicle.year }}</p>
                     <p><strong><i class="bi bi-palette-fill"></i> Cor:</strong> {{ vehicle.color }}</p>
                 </div>
+                
                 {% if vehicle.observations %}
                 <div class="col-md-12">
                     <p><strong><i class="bi bi-card-text"></i> Observações:</strong> {{ vehicle.observations }}</p>
@@ -37,10 +38,10 @@
             </div>
             
             {% if vehicle.image_url %}
-                <hr>
-                <div class="text-center">
-                    <img src="{{ vehicle.image_url }}" alt="Foto de {{ vehicle.model }}" class="img-fluid rounded" style="max-height: 300px;">
-                </div>
+            <hr>
+            <div class="text-center">
+                <img src="{{ vehicle.image_url }}" alt="Foto de {{ vehicle.model }}" class="img-fluid rounded" style="max-height: 300px;">
+            </div>
             {% endif %}
         </div>
     </div>
@@ -54,21 +55,45 @@
             </a>
         </div>
         <div class="card-body">
-            
+        
             {% if services %}
-                <div class="list-group">
-                    {% for service in services %}
-                        <div class="list-group-item">
+            <div class="list-group">
+                
+                {% for service in services %}
+                <div class="list-group-item">
+                    <div class="d-flex w-100 justify-content-between align-items-center">
+                        
+                        <div>
                             <h5 class="mb-1">{{ service.description }}</h5>
-                            <p class="mb-1"><strong>Data:</strong> {{ service.start_date }} | <strong>Status:</strong> {{ service.status.value }}</p>
+                            <p class="mb-1"><strong>Data:</strong> {{ service.start_date }} | <strong>Status:</strong> {{ service.status }}</p>
                             <small>Valor: R$ {{ "%.2f"|format(service.price) }}</small>
                         </div>
-                    {% endfor %}
+                        
+                        <div class="text-nowrap">
+                            <a href="{{ url_for('edit_service_form', service_id=service.id) }}" 
+                               class="btn btn-info btn-sm me-2">
+                                <i class="bi bi-pencil-fill"></i> Editar
+                            </a>
+                            
+                            <form action="{{ url_for('delete_service', service_id=service.id) }}" 
+                                  method="POST" 
+                                  class="d-inline"
+                                  onsubmit="return confirm('Tem certeza que deseja excluir este serviço?');">
+                                <button type="submit" class="btn btn-danger btn-sm">
+                                    <i class="bi bi-trash-fill"></i> Excluir
+                                </button>
+                            </form>
+                        </div>
+                        
+                    </div>
                 </div>
+                {% endfor %}
+            </div>
+            
             {% else %}
-                <div class="alert alert-info" role="alert">
-                    Nenhum serviço cadastrado para este veículo.
-                </div>
+            <div class="alert alert-info" role="alert">
+                Nenhum serviço cadastrado para este veículo.
+            </div>
             {% endif %}
             
         </div>

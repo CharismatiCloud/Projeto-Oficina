@@ -8,6 +8,12 @@
             
             <div class="card shadow-lg p-5 border-0">
                 
+                {% if error %}
+                    <div class="alert alert-danger" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <strong>Erro:</strong> {{ error }}
+                    </div>
+                {% endif %}
                 {% set form_action = url_for('create_vehicle') %}
                 {% set cancel_url = url_for('list_vehicles') %}
                 {% if vehicle.id %}
