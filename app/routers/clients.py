@@ -34,8 +34,9 @@ templates = Jinja2Templates(directory=BASE_DIR / "app" / "templates")
 def new_client_form(request: Request):
     username = get_current_user(request)
     return templates.TemplateResponse(
+        request,
         "clients/new.html",
-        {"request": request, "title": "Novo Cliente", "username": username}
+        {"title": "Novo Cliente", "username": username}
     )
 
 # Rota 2: Processar Cadastro de Cliente (MODIFICADA)
@@ -80,9 +81,9 @@ def list_clients(request: Request):
         db.close()
     
     return templates.TemplateResponse(
+        request,
         "clients/list.html",
         {
-            "request": request, 
             "clients": clients_list, 
             "title": "Lista de Clientes",
             "username": username
@@ -112,9 +113,9 @@ def show_client(request: Request, client_id: int):
         db.close()
     
     return templates.TemplateResponse(
+        request,
         "clients/show.html",
         {
-            "request": request, 
             "title": f"Detalhes do Cliente: {client.name}", 
             "client": client,
             "vehicles": vehicles_list,
@@ -137,9 +138,9 @@ def edit_client_form(request: Request, client_id: int):
         db.close()
 
     return templates.TemplateResponse(
+        request,
         "clients/edit.html",
         {
-            "request": request, 
             "client": client, 
             "title": f"Editar Cliente: {client.name}",
             "username": username
