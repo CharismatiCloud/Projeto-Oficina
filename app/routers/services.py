@@ -56,9 +56,9 @@ def new_service_form(request: Request, vehicle_id: int):
     status_options = [e.value for e in ServiceStatus]
 
     return templates.TemplateResponse(
+        request,
         "services/new.html",
         {
-            "request": request, 
             "title": f"Novo Serviço para {vehicle.model} ({vehicle.plate})", 
             "vehicle": vehicle,
             "status_options": status_options,
@@ -150,9 +150,9 @@ def edit_service_form(request: Request, service_id: int):
         db.close()
 
     return templates.TemplateResponse(
+        request,
         "services/edit.html",
         {
-            "request": request, 
             "title": f"Editar Serviço: {service.description}", 
             "service": service,
             "status_options": status_options,
