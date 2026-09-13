@@ -31,8 +31,9 @@ def login_form(request: Request):
         return RedirectResponse(url="/clients", status_code=status.HTTP_303_SEE_OTHER)
         
     return templates.TemplateResponse(
-        "auth/login.html", 
-        {"request": request, "title": "Login"}
+        request,
+        "auth/login.html",
+        {"title": "Login"}
     )
 
 # --- ROTA 2: PROCESSAR O LOGIN (MODIFICADA) ---
@@ -55,13 +56,13 @@ def login_process(request: Request, username: str = Form(...), password: str = F
         
         # 4. Se falhar, recarrega o login com erro
         return templates.TemplateResponse(
-            "auth/login.html", 
-            {
-                "request": request, 
+        request,
+        "auth/login.html",
+        {
                 "title": "Login",
                 "error": "Usuário ou senha inválidos."
             }
-        )
+    )
     finally:
         # 5. Fecha a sessão, não importa o que aconteça
         db.close()
