@@ -56,9 +56,9 @@ def new_vehicle_form_for_client(request: Request, client_id: int):
     }
     
     return templates.TemplateResponse(
+        request,
         "vehicles/new.html",
         {
-            "request": request, 
             "title": f"Novo Veículo para {client.name}", 
             "client": client,
             "vehicle": empty_vehicle,
@@ -82,9 +82,9 @@ def new_vehicle_form_general(request: Request):
     }
     
     return templates.TemplateResponse(
+        request,
         "vehicles/new.html",
         {
-            "request": request, 
             "title": "Novo Veículo", 
             "clients": clients_list,
             "vehicle": empty_vehicle,
@@ -105,9 +105,9 @@ def list_vehicles(request: Request):
         db.close()
         
     return templates.TemplateResponse(
+        request,
         "vehicles/list.html",
         {
-            "request": request, 
             "vehicles": vehicles_data, 
             "title": "Lista de Veículos",
             "username": username
@@ -146,16 +146,16 @@ async def create_vehicle(
             }
             
             return templates.TemplateResponse(
-                "vehicles/new.html",
-                {
-                    "request": request, 
+        request,
+        "vehicles/new.html",
+        {
                     "title": "Novo Veículo", 
                     "clients": clients_list,
                     "vehicle": form_data_error, # Devolve os dados digitados
                     "username": request.session.get("user"),
                     "error": f"A placa '{plate_str}' já está cadastrada." # O ALERTA!
                 }
-            )
+    )
         # --- FIM DA VERIFICAÇÃO ---
 
         client = db.query(Client).filter(Client.id == client_id).first()
@@ -214,9 +214,10 @@ def edit_vehicle_form(request: Request, vehicle_id: int):
         db.close()
     
     return templates.TemplateResponse(
-        "vehicles/new.html", # Reutiliza o template de criação
+        request,
+        "vehicles/new.html",
+        # Reutiliza o template de criação
         {
-            "request": request, 
             "vehicle": vehicle, 
             "title": f"Editar Veículo: {vehicle.plate}", 
             "clients": clients_list,
@@ -259,16 +260,16 @@ async def update_vehicle(
             vehicle_data_error.plate = plate_str 
             
             return templates.TemplateResponse(
-                "vehicles/new.html",
-                {
-                    "request": request, 
+        request,
+        "vehicles/new.html",
+        {
                     "vehicle": vehicle_data_error, 
                     "title": f"Editar Veículo: {vehicle_data_error.plate}", 
                     "clients": clients_list,
                     "username": request.session.get("user"),
                     "error": f"A placa '{plate_str}' já está cadastrada em outro veículo." # O ALERTA!
                 }
-            )
+    )
         # --- FIM DA VERIFICAÇÃO ---
         
         vehicle_to_update = db.query(Vehicle).filter(Vehicle.id == vehicle_id).first()
@@ -334,9 +335,9 @@ def show_vehicle(request: Request, vehicle_id: int):
         db.close()
 
     return templates.TemplateResponse(
+        request,
         "vehicles/show.html",
         {
-            "request": request, 
             "vehicle": vehicle, 
             "client": client,
             "services": services_list,
